@@ -2,69 +2,90 @@ Berikut adalah jawaban untuk pertanyaan Anda:
 
 ---
 
-## **1. Daftar API yang Dibuat oleh Backend**  
+## **1. Daftar API yang Dibuat oleh Backend**
 
 ### **Daftar Endpoint API**
+
 Setiap API dijelaskan dengan endpoint, metode HTTP, deskripsi, request, dan responsnya.
 
 ---
 
-### **1.1. User Management**  
-#### a. **Register User**  
-- **Endpoint:** `POST /api/users/register`  
-- **Deskripsi:** Mendaftarkan pengguna baru ke sistem.  
-- **Request:**  
+### **1.1. User Management**
+
+#### a. **Register User**
+
+- **Endpoint:** `POST /api/users/register`
+- **Deskripsi:** Mendaftarkan pengguna baru ke sistem.
+- **Request:**
   ```json
   {
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "password": "securepassword"
+    "username": "abcabc",
+    "email": "abc@example.com",
+    "password": "abcabc"
   }
-  ```  
-- **Response (Success):**  
+  ```
+- **Response (Success):**
   ```json
   {
+    "status": true,
+    "code": 201,
     "message": "User registered successfully",
-    "user_id": 1
+    "data": {
+      "id": "xxxxxxxx",
+      "username": "abcabc",
+      "email": "abc@example.com",
+      "created_at": "2024-11-21T06:40:20.648Z",
+      "update_at": "2024-11-21T06:40:20.648Z"
+    }
   }
-  ```  
-- **Response (Error):**  
+  ```
+- **Response (Error):**
   ```json
   {
-    "error": "Email already exists"
+    "status": false,
+    "code": 400,
+    "message": "Bad Request",
+    "detail_error": "All fields are required"
   }
   ```
 
-#### b. **Login User**  
-- **Endpoint:** `POST /api/users/login`  
-- **Deskripsi:** Mengotentikasi pengguna.  
-- **Request:**  
+#### b. **Login User**
+
+- **Endpoint:** `POST /api/users/login`
+- **Deskripsi:** Mengotentikasi pengguna.
+- **Request:**
   ```json
   {
-    "email": "john.doe@example.com",
-    "password": "securepassword"
+    "email": "abc@example.com",
+    "password": "abcabc"
   }
-  ```  
-- **Response (Success):**  
+  ```
+- **Response (Success):**
   ```json
   {
+    "status": true,
+    "code": 200,
     "message": "Login successful",
-    "token": "jwt_token_string"
+    "data": "token xxxxxxx"
   }
-  ```  
-- **Response (Error):**  
+  ```
+- **Response (Error):**
   ```json
   {
-    "error": "Invalid email or password"
+    "status": false,
+    "code": 400,
+    "message": "Bad Request",
+    "detail_error": "Email and password are required"
   }
   ```
 
-#### c. **Get User Profile**  
-- **Endpoint:** `GET /api/users/profile`  
-- **Deskripsi:** Mendapatkan profil pengguna berdasarkan token.  
+#### c. **Get User Profile**
+
+- **Endpoint:** `GET /api/users/profile`
+- **Deskripsi:** Mendapatkan profil pengguna berdasarkan token.
 - **Headers:**  
-  `Authorization: Bearer <token>`  
-- **Response:**  
+  `Authorization: Bearer <token>`
+- **Response:**
   ```json
   {
     "user_id": 1,
@@ -73,13 +94,23 @@ Setiap API dijelaskan dengan endpoint, metode HTTP, deskripsi, request, dan resp
   }
   ```
 
+| **Endpoint**       | **Frontend Validasi**                                    | **Backend Validasi**                                               |
+| ------------------ | -------------------------------------------------------- | ------------------------------------------------------------------ |
+| **POST /register** | Validasi nama, email, dan password. Format harus sesuai. | Cek format, panjang, sanitasi, dan keunikan email. Hash password.  |
+| **POST /login**    | Validasi email dan password untuk panjang dan format.    | Cek email di database, validasi password hash.                     |
+| **GET /profile**   | Pastikan token dikirim.                                  | Validasi token JWT, cek pengguna ada di database.                  |
+| **PUT /profile**   | Validasi nama (panjang), dan email (format).             | Cek format, sanitasi input, validasi keunikan email jika diubah.   |
+| **GET /logout**    | Hapus token di sisi klien.                               | Jika menggunakan blacklist token, tambahkan token ke daftar hitam. |
+
 ---
 
-### **1.2. Event/Transport Management**  
-#### a. **Get All Events/Transport**  
-- **Endpoint:** `GET /api/events`  
-- **Deskripsi:** Mendapatkan semua daftar acara atau transportasi.  
-- **Response:**  
+### **1.2. Event/Transport Management**
+
+#### a. **Get All Events/Transport**
+
+- **Endpoint:** `GET /api/events`
+- **Deskripsi:** Mendapatkan semua daftar acara atau transportasi.
+- **Response:**
   ```json
   [
     {
@@ -99,10 +130,11 @@ Setiap API dijelaskan dengan endpoint, metode HTTP, deskripsi, request, dan resp
   ]
   ```
 
-#### b. **Get Event/Transport Details**  
-- **Endpoint:** `GET /api/events/:id`  
-- **Deskripsi:** Mendapatkan detail acara atau transportasi berdasarkan ID.  
-- **Response:**  
+#### b. **Get Event/Transport Details**
+
+- **Endpoint:** `GET /api/events/:id`
+- **Deskripsi:** Mendapatkan detail acara atau transportasi berdasarkan ID.
+- **Response:**
   ```json
   {
     "id": 1,
@@ -117,38 +149,41 @@ Setiap API dijelaskan dengan endpoint, metode HTTP, deskripsi, request, dan resp
 
 ---
 
-### **1.3. Booking Management**  
-#### a. **Create Booking**  
-- **Endpoint:** `POST /api/bookings`  
-- **Deskripsi:** Membuat pemesanan tiket.  
-- **Request:**  
+### **1.3. Booking Management**
+
+#### a. **Create Booking**
+
+- **Endpoint:** `POST /api/bookings`
+- **Deskripsi:** Membuat pemesanan tiket.
+- **Request:**
   ```json
   {
     "event_id": 1,
     "quantity": 2
   }
-  ```  
-- **Response (Success):**  
+  ```
+- **Response (Success):**
   ```json
   {
     "message": "Booking successful",
     "booking_id": 123,
     "total_price": 100000
   }
-  ```  
-- **Response (Error):**  
+  ```
+- **Response (Error):**
   ```json
   {
     "error": "Seats not available"
   }
   ```
 
-#### b. **Get User Bookings**  
-- **Endpoint:** `GET /api/bookings`  
-- **Deskripsi:** Mendapatkan semua pemesanan tiket pengguna.  
+#### b. **Get User Bookings**
+
+- **Endpoint:** `GET /api/bookings`
+- **Deskripsi:** Mendapatkan semua pemesanan tiket pengguna.
 - **Headers:**  
-  `Authorization: Bearer <token>`  
-- **Response:**  
+  `Authorization: Bearer <token>`
+- **Response:**
   ```json
   [
     {
@@ -165,25 +200,27 @@ Setiap API dijelaskan dengan endpoint, metode HTTP, deskripsi, request, dan resp
 
 ---
 
-### **1.4. Payment Management**  
-#### a. **Initiate Payment**  
-- **Endpoint:** `POST /api/payments`  
-- **Deskripsi:** Menginisialisasi proses pembayaran.  
-- **Request:**  
+### **1.4. Payment Management**
+
+#### a. **Initiate Payment**
+
+- **Endpoint:** `POST /api/payments`
+- **Deskripsi:** Menginisialisasi proses pembayaran.
+- **Request:**
   ```json
   {
     "booking_id": 123,
     "payment_method": "credit_card"
   }
-  ```  
-- **Response (Success):**  
+  ```
+- **Response (Success):**
   ```json
   {
     "message": "Payment initiated",
     "payment_url": "https://payment-gateway.com/checkout"
   }
-  ```  
-- **Response (Error):**  
+  ```
+- **Response (Error):**
   ```json
   {
     "error": "Invalid booking ID"
@@ -192,69 +229,74 @@ Setiap API dijelaskan dengan endpoint, metode HTTP, deskripsi, request, dan resp
 
 ---
 
-## **2. Model Database**  
+## **2. Model Database**
 
-Berikut adalah model database yang diperlukan untuk aplikasi ini:  
+Berikut adalah model database yang diperlukan untuk aplikasi ini:
 
 ---
 
-### **2.1. Tabel `users`**  
+### **2.1. Tabel `users`**
+
 Menyimpan data pengguna.  
-| **Kolom**        | **Tipe**       | **Deskripsi**             |
+| **Kolom** | **Tipe** | **Deskripsi** |
 |-------------------|----------------|---------------------------|
-| id               | INT (PK)       | Primary key.              |
-| username             | VARCHAR(100)   | Nama pengguna.            |
-| email            | VARCHAR(100)   | Email unik pengguna.      |
-| password         | VARCHAR(100)   | Hash password.            |
-| address         | VARCHAR(255)   | Alamat rumah (Opsional).            |
-| dateOfBirth         | DATE   |  Tanggal lahir. (Opsional)           |
-| created_at         | DATE   | Date.            |
-| update_at         | DATE   | Date.            |
+| id | INT (PK) | Primary key. |
+| username | VARCHAR(100) | Nama pengguna. |
+| email | VARCHAR(100) | Email unik pengguna. |
+| password | VARCHAR(100) | Hash password. |
+| address | VARCHAR(255) | Alamat rumah (Opsional). |
+| dateOfBirth | DATE | Tanggal lahir. (Opsional) |
+| created_at | DATE | Date. |
+| update_at | DATE | Date. |
 
 ---
 
-### **2.2. Tabel `events`**  
+### **2.2. Tabel `events`**
+
 Menyimpan data acara/transportasi.  
-| **Kolom**        | **Tipe**       | **Deskripsi**             |
+| **Kolom** | **Tipe** | **Deskripsi** |
 |-------------------|----------------|---------------------------|
-| id               | INT (PK)       | Primary key.              |
-| title            | VARCHAR(255)   | Judul acara.              |
-| description      | TEXT           | Deskripsi acara.          |
-| location         | VARCHAR(255)   | Lokasi acara.             |
-| date             | DATE           | Tanggal acara.            |
-| price            | DECIMAL(10,2)  | Harga tiket.              |
-| seats_available  | INT            | Jumlah kursi tersedia.    |
+| id | INT (PK) | Primary key. |
+| title | VARCHAR(255) | Judul acara. |
+| description | TEXT | Deskripsi acara. |
+| location | VARCHAR(255) | Lokasi acara. |
+| date | DATE | Tanggal acara. |
+| price | DECIMAL(10,2) | Harga tiket. |
+| seats_available | INT | Jumlah kursi tersedia. |
 
 ---
 
-### **2.3. Tabel `bookings`**  
+### **2.3. Tabel `bookings`**
+
 Menyimpan data pemesanan tiket.  
-| **Kolom**        | **Tipe**       | **Deskripsi**             |
+| **Kolom** | **Tipe** | **Deskripsi** |
 |-------------------|----------------|---------------------------|
-| id               | INT (PK)       | Primary key.              |
-| user_id          | INT (FK)       | ID pengguna.              |
-| event_id         | INT (FK)       | ID acara.                 |
-| quantity         | INT            | Jumlah tiket dipesan.     |
-| total_price      | DECIMAL(10,2)  | Total harga.              |
-| status           | VARCHAR(50)    | Status pemesanan.         |
+| id | INT (PK) | Primary key. |
+| user_id | INT (FK) | ID pengguna. |
+| event_id | INT (FK) | ID acara. |
+| quantity | INT | Jumlah tiket dipesan. |
+| total_price | DECIMAL(10,2) | Total harga. |
+| status | VARCHAR(50) | Status pemesanan. |
 
 ---
 
-### **2.4. Tabel `payments`**  
+### **2.4. Tabel `payments`**
+
 Menyimpan data pembayaran.  
-| **Kolom**        | **Tipe**       | **Deskripsi**             |
+| **Kolom** | **Tipe** | **Deskripsi** |
 |-------------------|----------------|---------------------------|
-| id               | INT (PK)       | Primary key.              |
-| booking_id       | INT (FK)       | ID pemesanan.             |
-| payment_method   | VARCHAR(50)    | Metode pembayaran.        |
-| payment_status   | VARCHAR(50)    | Status pembayaran.        |
-| payment_url      | TEXT           | URL pembayaran.           |
+| id | INT (PK) | Primary key. |
+| booking_id | INT (FK) | ID pemesanan. |
+| payment_method | VARCHAR(50) | Metode pembayaran. |
+| payment_status | VARCHAR(50) | Status pembayaran. |
+| payment_url | TEXT | URL pembayaran. |
 
 ---
 
-### **Relasi Antar Tabel**  
-1. **users** ↔ **bookings**: *One-to-Many* (1 pengguna dapat memiliki banyak pemesanan).  
-2. **events** ↔ **bookings**: *One-to-Many* (1 acara dapat dipesan oleh banyak pengguna).  
-3. **bookings** ↔ **payments**: *One-to-One* (1 pemesanan memiliki 1 pembayaran).  
+### **Relasi Antar Tabel**
 
---- 
+1. **users** ↔ **bookings**: _One-to-Many_ (1 pengguna dapat memiliki banyak pemesanan).
+2. **events** ↔ **bookings**: _One-to-Many_ (1 acara dapat dipesan oleh banyak pengguna).
+3. **bookings** ↔ **payments**: _One-to-One_ (1 pemesanan memiliki 1 pembayaran).
+
+---

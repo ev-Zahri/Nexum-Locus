@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcrypt');
 const { generateToken } = require('../utils/jwtHelper');
 const createRes = require('../utils/resHandler');
+const createError = require('../utils/errorHandler');
 const pool = require('../config/db');
 
 const app = express();
@@ -12,31 +13,27 @@ exports.register = async (req, res) => {
 
     // Validasi data
     if (!username || !email || !password) {
-        return res.status(400).json({ message: 'All fields are required' });
+        return res.status(400).json(createError(false, 400, "Bad Request", "All fields are required"));
     }
-
+    
     try {
-        // Cek apakah email sudah digunakan
         const userCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
         if (userCheck.rows.length > 0) {
-            return res.status(400).json({ message: 'Email already exists' });
+            return res.status(400).json(createError(false, 400, "Bad Request", "Email already exists"));
         }
 
         const id = uuidv4().replace(/-/g, '').slice(0, 8);
         const created_at = new Date().toISOString();
         const update_at = created_at;
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 8);
 
-        // Simpan pengguna ke database
         const result = await pool.query(
             'INSERT INTO users (id, username, email, password, created_at, update_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, email, created_at, update_at',
             [id, username, email, hashedPassword, created_at, update_at]
         );
-        res.status(201).json(createRes("success", 201, "User registered successfully", result.rows[0]));
+        return res.status(201).json(createRes(true, 201, "User registered successfully", result.rows[0]));
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
+        return res.status(500).json(createError(false, 500, "Internal Server Error", "The server encountered an error"));
     }
 };
 
@@ -45,31 +42,27 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        return res.status(400).json({ message: 'Email and password are required' });
+        return res.status(400).json(createError(false, 400, "Bad Request", "Email and password are required"));
     }
 
     try {
-        // Cek pengguna berdasarkan email
         const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
         if (result.rows.length === 0) {
-            return res.status(401).json({ message: 'Invalid credentials' });
+            return res.status(401).json(createError(false, 401, "Unauthenticated", "Invalid credentials"));
         }
 
         const user = result.rows[0];
 
-        // Periksa password
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) {
-            return res.status(401).json({ message: 'Invalid credentials' });
+            return res.status(401).json(createError(false, 401, "Unauthenticated", "Invalid credentials"));
         }
 
-        // Generate token
         const token = generateToken({ id: user.id, email: user.email });
-
-        res.json({ message: 'Login successful', token });
+        return res.status(200).json(createRes(true, 200, "Login successful", token));
     } catch (err) {
         console.error(err);
-        res.status(500).json({ message: 'Server error' });
+        return res.status(500).json(createError(false, 500, "Internal Server Error", "The server encountered an error"));
     }
 };
 
