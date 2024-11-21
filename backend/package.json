@@ -1,0 +1,21 @@
+{
+  "name": "nexum_locus",
+  "version": "1.0.0",
+  "description": "Aplikasi untuk pemesanan tiket",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.3",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1",
+    "uuid": "^11.0.3"
+  }
+}
