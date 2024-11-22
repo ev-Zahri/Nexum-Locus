@@ -1,6 +1,6 @@
-const createError = (status, code, message, detailErr) => {
+const createError = (success, code, message, detailErr) => {
     return {
-        status: status,
+        success: success,
         code: code,
         message: message,
         detail_error: detailErr,

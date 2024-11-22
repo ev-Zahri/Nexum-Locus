@@ -27,7 +27,7 @@ Setiap API dijelaskan dengan endpoint, metode HTTP, deskripsi, request, dan resp
 - **Response (Success):**
   ```json
   {
-    "status": true,
+    "success": true,
     "code": 201,
     "message": "User registered successfully",
     "data": {
@@ -42,7 +42,7 @@ Setiap API dijelaskan dengan endpoint, metode HTTP, deskripsi, request, dan resp
 - **Response (Error):**
   ```json
   {
-    "status": false,
+    "success": false,
     "code": 400,
     "message": "Bad Request",
     "detail_error": "All fields are required"
@@ -63,7 +63,7 @@ Setiap API dijelaskan dengan endpoint, metode HTTP, deskripsi, request, dan resp
 - **Response (Success):**
   ```json
   {
-    "status": true,
+    "success": true,
     "code": 200,
     "message": "Login successful",
     "data": "token xxxxxxx"
@@ -72,7 +72,7 @@ Setiap API dijelaskan dengan endpoint, metode HTTP, deskripsi, request, dan resp
 - **Response (Error):**
   ```json
   {
-    "status": false,
+    "success": false,
     "code": 400,
     "message": "Bad Request",
     "detail_error": "Email and password are required"
@@ -91,6 +91,40 @@ Setiap API dijelaskan dengan endpoint, metode HTTP, deskripsi, request, dan resp
     "user_id": 1,
     "name": "John Doe",
     "email": "john.doe@example.com"
+  }
+  ```
+- **Response (Error):**
+  ```json
+  {
+    "success": false,
+    "code": 400,
+    "message": "Bad Request",
+    "detail_error": "Email and password are required"
+  }
+  ```
+
+#### d. **Update User Profile**
+
+- **Endpoint:** `PUT /api/users/profile`
+- **Deskripsi:** Mengubah profil pengguna berdasarkan token.
+- **Headers:**  
+  `Authorization: Bearer <token>`
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "code": 200,
+    "message": "Profile updated successfully",
+    "data": {
+      "id": "xxxxxxxxx",
+      "username": "abcabc",
+      "email": "abc@example.com",
+      "password": "xxxxxxxxx",
+      "address": "xxxxxxxxx",
+      "dateofbirth": "xxxxxxxxx",
+      "created_at": "2024-11-21T06:40:20.648Z",
+      "update_at": "2024-11-21T06:40:20.648Z"
+    }
   }
   ```
 
@@ -246,8 +280,8 @@ Menyimpan data pengguna.
 | password | VARCHAR(100) | Hash password. |
 | address | VARCHAR(255) | Alamat rumah (Opsional). |
 | dateOfBirth | DATE | Tanggal lahir. (Opsional) |
-| created_at | DATE | Date. |
-| update_at | DATE | Date. |
+| created_at | DATE | Waktu dibuat (Otomatis). |
+| update_at | DATE | Waktu dirubah (Otomatis). |
 
 ---
 
@@ -258,11 +292,14 @@ Menyimpan data acara/transportasi.
 |-------------------|----------------|---------------------------|
 | id | INT (PK) | Primary key. |
 | title | VARCHAR(255) | Judul acara. |
+| artist | VARCHAR(255) | Seniman/pembicara acara. |
 | description | TEXT | Deskripsi acara. |
 | location | VARCHAR(255) | Lokasi acara. |
 | date | DATE | Tanggal acara. |
-| price | DECIMAL(10,2) | Harga tiket. |
+| price | DECIMAL(10,0) | Harga tiket. |
 | seats_available | INT | Jumlah kursi tersedia. |
+| seat_reserved | INT | Jumlah kursi yang telah dipesan. |
+| created_at | DATE | Waktu dibuat (Otomatis). |
 
 ---
 

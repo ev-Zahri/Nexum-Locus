@@ -33,7 +33,7 @@ exports.register = async (req, res) => {
         );
         return res.status(201).json(createRes(true, 201, "User registered successfully", result.rows[0]));
     } catch (err) {
-        return res.status(500).json(createError(false, 500, "Internal Server Error", "The server encountered an error"));
+        return res.status(500).json(createError(false, 500, "Internal Server Error", err.message));
     }
 };
 
@@ -48,7 +48,7 @@ exports.login = async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
         if (result.rows.length === 0) {
-            return res.status(401).json(createError(false, 401, "Unauthenticated", "Invalid credentials"));
+            return res.status(404).json(createError(false, 404, "Not found", "User not found"));
         }
 
         const user = result.rows[0];
@@ -61,49 +61,58 @@ exports.login = async (req, res) => {
         const token = generateToken({ id: user.id, email: user.email });
         return res.status(200).json(createRes(true, 200, "Login successful", token));
     } catch (err) {
-        console.error(err);
-        return res.status(500).json(createError(false, 500, "Internal Server Error", "The server encountered an error"));
+        return res.status(500).json(createError(false, 500, "Internal Server Error", err.message));
     }
 };
 
 // // GET /profile: Mendapatkan detail profil pengguna
-// app.get('/profile', authenticate, async (req, res) => {
-//     try {
-//         const user = await pool.query('SELECT id, name, email FROM users WHERE id = $1', [req.user.id]);
-//         if (user.rows.length === 0) {
-//             return res.status(404).json({ message: 'User not found' });
-//         }
-
-//         res.json({ user: user.rows[0] });
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).json({ message: 'Server error' });
-//     }
-// });
+exports.getProfile = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const user = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+        if (user.rows.length === 0) {
+            return res.status(404).json(createError(false, 404, "Not found", "User not found"));
+        }
+        return res.status(200).json(createRes(true, 200, "User data successfully retrieved", result.rows[0]));
+    } catch (err) {
+        return res.status(500).json(createError(false, 500, "Internal Server Error", err.message));
+    }
+};
 
 // // PUT /profile: Memperbarui profil pengguna
-// app.put('/profile', authenticate, async (req, res) => {
-//     const { name, email } = req.body;
+exports.updateProfile = async (req, res) => {
+    const { id } = req.params;
+    const { username, email, password, address, dateOfBirth } = req.body;
+    try {
+        // Ambil data pengguna saat ini dari database
+        const currentUserResult = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+        if (currentUserResult.rows.length === 0) {
+            return res.status(404).json(createError(false, 404, "Not found", "User not found"));
+        }
 
-//     try {
-//         const result = await pool.query(
-//             'UPDATE users SET name = $1, email = $2 WHERE id = $3 RETURNING id, name, email',
-//             [name, email, req.user.id]
-//         );
+        const currentUser = currentUserResult.rows[0];
 
-//         if (result.rows.length === 0) {
-//             return res.status(404).json({ message: 'User not found' });
-//         }
+        // Tetapkan nilai baru berdasarkan request body, atau gunakan nilai lama jika tidak ada
+        const updatedusername = username || currentUser.username;
+        const updatedEmail = email || currentUser.email;
+        const updatedPass = password || currentUser.password;
+        const updatedAddress = address || currentUser.address;
+        const updatedDateOfBirth = dateOfBirth || currentUser.dateOfBirth;
+        const updateAt = new Date().toISOString();
 
-//         res.json({ message: 'Profile updated successfully', user: result.rows[0] });
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).json({ message: 'Server error' });
-//     }
-// });
+        // Perbarui hanya data yang diberikan
+        const result = await pool.query(
+            'UPDATE users SET username = $2, email = $3, password = $4, address = $5, dateOfBirth = $6, update_at = $7 WHERE id = $1 RETURNING id, username, email, password, address, dateOfBirth, update_at',
+            [id, updatedusername, updatedEmail, updatedPass, updatedAddress, updatedDateOfBirth, updateAt]
+        );
+        return res.status(200).json(createRes(true, 200, "Profile updated successfully", result.rows[0]));
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json(createError(false, 500, "Internal Server Error", err.message));
+    }
+};
 
 // // GET /logout: Logout pengguna
-// app.get('/logout', (req, res) => {
-//     // Logout biasanya menghapus token di sisi klien
-//     res.json({ message: 'Logout successful' });
-// });
+exports.logout = (req, res) => {
+    return res.status(200).json(createRes(true, 200, "Logout successful", null));
+};

@@ -1,6 +1,6 @@
-const createRes = (status, code, message, data) => {
+const createRes = (success, code, message, data) => {
     return {
-        status: status,
+        success: success,
         code: code,
         message: message,
         data: data,
