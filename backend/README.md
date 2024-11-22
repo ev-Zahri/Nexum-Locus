@@ -128,14 +128,6 @@ Setiap API dijelaskan dengan endpoint, metode HTTP, deskripsi, request, dan resp
   }
   ```
 
-| **Endpoint**       | **Frontend Validasi**                                    | **Backend Validasi**                                               |
-| ------------------ | -------------------------------------------------------- | ------------------------------------------------------------------ |
-| **POST /register** | Validasi nama, email, dan password. Format harus sesuai. | Cek format, panjang, sanitasi, dan keunikan email. Hash password.  |
-| **POST /login**    | Validasi email dan password untuk panjang dan format.    | Cek email di database, validasi password hash.                     |
-| **GET /profile**   | Pastikan token dikirim.                                  | Validasi token JWT, cek pengguna ada di database.                  |
-| **PUT /profile**   | Validasi nama (panjang), dan email (format).             | Cek format, sanitasi input, validasi keunikan email jika diubah.   |
-| **GET /logout**    | Hapus token di sisi klien.                               | Jika menggunakan blacklist token, tambahkan token ke daftar hitam. |
-
 ---
 
 ### **1.2. Event/Transport Management**
@@ -178,6 +170,80 @@ Setiap API dijelaskan dengan endpoint, metode HTTP, deskripsi, request, dan resp
     "date": "2024-11-30",
     "price": 50000,
     "seats_available": 100
+  }
+  ```
+
+#### c. **Insert event**
+
+- **Endpoint:** `POST /api/events`
+- **Deskripsi:** Mendaftarkan event baru ke sistem.
+- **Request:**
+  ```json
+  {
+    "title": "Music Concert",
+    "artist": "Isyana",
+    "description": "Live concert with popular artists.",
+    "location": "Jakarta",
+    "date": "2024-11-30",
+    "price": 50000,
+    "available_seats": 100
+  }
+  ```
+- **Response (Success):**
+  ```json
+  {
+    "success": true,
+    "code": 201,
+    "message": "Event registered successfully",
+    "data": {
+      "id": "xxxxxx",
+      "title": "Music Concert",
+      "artist": "Isyana",
+      "description": "Live concert with popular artists.",
+      "location": "Jakarta",
+      "date": "2024-11-29T17:00:00.000Z",
+      "price": "50000",
+      "available_seats": 100,
+      "reserved_seats": 100,
+      "created_at": "2024-11-21T20:06:28.356Z",
+      "updated_at": "2024-11-21T20:06:28.356Z"
+    }
+  }
+  ```
+- **Response (Error):**
+  ```json
+  {
+    "success": false,
+    "code": 400,
+    "message": "Bad Request",
+    "detail_error": "All fields are required"
+  }
+  ```
+
+#### d. **Update event**
+
+- **Endpoint:** `PUT /api/events/:id`
+- **Deskripsi:** Mengubah event berdasarkan id.
+- **Headers:**  
+  `Authorization: Bearer <token>`
+- **Response:**
+  ```json
+  {
+    "success": true,
+    "code": 200,
+    "message": "Profile updated successfully",
+    "data": {
+      "id": "xxxx",
+      "title": "Music Concert",
+      "artist": "Isyana",
+      "description": "Live concert with popular artists.",
+      "location": "Jakarta",
+      "date": "2024-11-29T17:00:00.000Z",
+      "price": "100000",
+      "available_seats": 100,
+      "reserved_seats": 100,
+      "updated_at": "2024-11-21T20:39:27.387Z"
+    }
   }
   ```
 
@@ -297,8 +363,8 @@ Menyimpan data acara/transportasi.
 | location | VARCHAR(255) | Lokasi acara. |
 | date | DATE | Tanggal acara. |
 | price | DECIMAL(10,0) | Harga tiket. |
-| seats_available | INT | Jumlah kursi tersedia. |
-| seat_reserved | INT | Jumlah kursi yang telah dipesan. |
+| available_seats | INT | Jumlah kursi tersedia. |
+| reserved_seats | INT | Jumlah kursi yang telah dipesan. |
 | created_at | DATE | Waktu dibuat (Otomatis). |
 
 ---

@@ -73,7 +73,7 @@ exports.getProfile = async (req, res) => {
         if (user.rows.length === 0) {
             return res.status(404).json(createError(false, 404, "Not found", "User not found"));
         }
-        return res.status(200).json(createRes(true, 200, "User data successfully retrieved", result.rows[0]));
+        return res.status(200).json(createRes(true, 200, "User data successfully retrieved", user.rows[0]));
     } catch (err) {
         return res.status(500).json(createError(false, 500, "Internal Server Error", err.message));
     }
