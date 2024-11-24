@@ -28,7 +28,7 @@ exports.register = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 8);
 
         const result = await pool.query(
-            'INSERT INTO users (id, username, email, password, created_at, update_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, email, created_at, update_at',
+            'INSERT INTO users (id, username, email, password, created_at, update_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, username, email, password, created_at, update_at',
             [id, username, email, hashedPassword, created_at, update_at]
         );
         return res.status(201).json(createRes(true, 201, "User registered successfully", result.rows[0]));
@@ -83,6 +83,7 @@ exports.getProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
     const { id } = req.params;
     const { username, email, password, address, dateOfBirth, role } = req.body;
+
     try {
         // Ambil data pengguna saat ini dari database
         const currentUserResult = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
@@ -93,21 +94,25 @@ exports.updateProfile = async (req, res) => {
         const currentUser = currentUserResult.rows[0];
 
         // Tetapkan nilai baru berdasarkan request body, atau gunakan nilai lama jika tidak ada
-        const updatedusername = username || currentUser.username;
+        const updatedUsername = username || currentUser.username;
         const updatedEmail = email || currentUser.email;
-        const updatedPass = password || currentUser.password;
+        const updatedPassword = password 
+            ? await bcrypt.hash(password, 8) // Hash hanya jika password baru diberikan
+            : currentUser.password;         // Gunakan password lama jika tidak ada input baru
         const updatedAddress = address || currentUser.address;
-        const updatedDateOfBirth = dateOfBirth || currentUser.dateOfBirth;
+        const updatedDateOfBirth = dateOfBirth || currentUser.dateofbirth;
         const updatedRole = role || currentUser.role;
-        const updateAt = new Date().toISOString();
-
-        const hashedPassword = await bcrypt.hash(updatedPass, 8);
+        const updatedAt = new Date().toISOString();
 
         // Perbarui hanya data yang diberikan
         const result = await pool.query(
-            'UPDATE users SET username = $2, email = $3, password = $4, address = $5, dateOfBirth = $6, update_at = $7, role = $8  WHERE id = $1 RETURNING id, username, email, password, address, dateOfBirth, update_at, role',
-            [id, updatedusername, updatedEmail, hashedPassword, updatedAddress, updatedDateOfBirth, updateAt, updatedRole]
+            `UPDATE users 
+            SET username = $2, email = $3, password = $4, address = $5, dateofbirth = $6, update_at = $7, role = $8
+            WHERE id = $1
+            RETURNING id, username, email, address, dateofbirth, update_at, role`,
+            [id, updatedUsername, updatedEmail, updatedPassword, updatedAddress, updatedDateOfBirth, updatedAt, updatedRole]
         );
+
         return res.status(200).json(createRes(true, 200, "Profile updated successfully", result.rows[0]));
     } catch (err) {
         console.error(err);

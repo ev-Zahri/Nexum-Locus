@@ -1,4 +1,8 @@
 const express = require('express');
+const multer = require('multer');
+const sharp = require('sharp');
+const path = require('path');
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const createRes = require('../utils/resHandler');
 const createError = require('../utils/errorHandler');
@@ -58,37 +62,87 @@ exports.getEvent = async (req, res) => {
 };
 
 
+// Konfigurasi folder penyimpanan untuk gambar
+const uploadPath = path.join(__dirname, '../uploads/posters');
+if (!fs.existsSync(uploadPath)) {
+    fs.mkdirSync(uploadPath, { recursive: true });
+}
+
+
+// Konfigurasi Multer untuk menangani file upload
+const storage = multer.memoryStorage(); // Menyimpan file sementara di memori
+const upload = multer({
+    storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024, // Batas ukuran file (5 MB)
+    },
+    fileFilter: (req, file, cb) => {
+        const fileTypes = /jpeg|jpg|png/;
+        const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
+        const mimeType = fileTypes.test(file.mimetype);
+
+        if (extname && mimeType) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only JPEG, JPG, and PNG are allowed.'));
+        }
+    },
+}).single('poster');
+
+// Kontroler addEvent
 exports.addEvent = async (req, res) => {
-    const { title, artist, description, location, date, price, available_seats } = req.body;
-
-    if (!title || !artist || !location || !date || !price) {
-        return res.status(400).json(createError(false, 400, "Bad Request", "All fields are required"));
-    }
-
-    if (!description) {
-        description = "Description not yet added";
-    }
-
-    try {
-        const eventCheck = await pool.query('SELECT * FROM events WHERE title = $1', [title]);
-        if (eventCheck.rows.length > 0) {
-            return res.status(400).json(createError(false, 400, "Bad Request", "Event already exists"));
+    upload(req, res, async (err) => {
+        if (err) {
+            return res.status(400).json(createError(false, 400, 'Bad Request', err.message));
         }
 
-        const id = uuidv4().replace(/-/g, '').slice(0, 8);
-        const created_at = new Date().toISOString();
-        const updated_at = created_at;
-        const reserved_seats = available_seats;
+        const { title, artist, description, location, date, price, available_seats } = req.body;
 
-        const result = await pool.query(
-            'INSERT INTO events (id, title, artist, description, location, date, price, available_seats, reserved_seats, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, title, artist, description, location, date, price, available_seats, reserved_seats, created_at, updated_at',
-            [id, title, artist, description, location, date, price, available_seats, reserved_seats, created_at, updated_at]
-        );
-        return res.status(201).json(createRes(true, 201, "Event registered successfully", result.rows[0]));
-    } catch (err) {
-        return res.status(500).json(createError(false, 500, "Internal Server Error", err.message));
-    }
-}
+        if (!title || !artist || !location || !date || !price) {
+            return res.status(400).json(createError(false, 400, "Bad Request", "All fields are required"));
+        }
+
+        let posterPath = null;
+        if (req.file) {
+            try {
+                // Generate unique filename
+                const posterFilename = `${title}_poster.jpeg`;
+                posterPath = path.join(uploadPath, posterFilename);
+
+                await sharp(req.file.buffer)
+                    .resize(800, 600) 
+                    .jpeg({ quality: 80 }) 
+                    .toFile(posterPath);
+
+                posterPath = `/uploads/posters/${posterFilename}`; 
+            } catch (resizeError) {
+                return res.status(500).json(createError(false, 500, 'Internal Server Error', 'Failed to process image'));
+            }
+        }
+
+        try {
+            const eventCheck = await pool.query('SELECT * FROM events WHERE title = $1', [title]);
+            if (eventCheck.rows.length > 0) {
+                return res.status(400).json(createError(false, 400, "Bad Request", "Event already exists"));
+            }
+
+            const id = uuidv4().replace(/-/g, '').slice(0, 8);
+            const created_at = new Date().toISOString();
+            const updated_at = created_at;
+            const reserved_seats = available_seats;
+
+            const result = await pool.query(
+                'INSERT INTO events (id, title, artist, description, location, date, price, available_seats, reserved_seats, poster_path, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id, title, artist, description, location, date, price, available_seats, reserved_seats, poster_path, created_at, updated_at',
+                [id, title, artist, description || "Description not yet added", location, date, price, available_seats, reserved_seats, posterPath, created_at, updated_at]
+            );
+
+            return res.status(201).json(createRes(true, 201, "Event registered successfully", result.rows[0]));
+        } catch (err) {
+            console.error(err);
+            return res.status(500).json(createError(false, 500, "Internal Server Error", err.message));
+        }
+    });
+};
 
 
 exports.updateEvent = async (req, res) => {
