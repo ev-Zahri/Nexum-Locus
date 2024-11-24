@@ -16,9 +16,11 @@ const generateToken = (payload, expiresIn = '1h') => {
  * Verify a JWT token.
  * @param {String} token - Token to verify.
  * @returns {Object} Decoded token payload if valid.
- * @throws {Error} If the token is invalid or expired.
  */
 const verifyToken = (token) => {
+    if (!token) {
+        throw new Error("Token is required");
+    }
     return jwt.verify(token, JWT_SECRET);
 };
 

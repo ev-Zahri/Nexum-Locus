@@ -4,16 +4,16 @@ const createRes = require('../utils/resHandler');
 const createError = require('../utils/errorHandler');
 const pool = require('../config/db');
 
-exports.getAllEvents = async (req, res) => {
+exports.getAllTicket = async (req, res) => {
     try {
-        const event = await pool.query('SELECT * FROM events') || null;
-        return res.status(200).json(createRes(true, 200, "List events successfully retrieved", event.rows));
+        const event = await pool.query('SELECT * FROM tickets') || null;
+        return res.status(200).json(createRes(true, 200, "List ticket successfully retrieved", event.rows));
     } catch (err) {
         return res.status(500).json(createError(false, 500, "Internal Server Error", err.message));
     }
 }
 
-exports.getEvent = async (req, res) => {
+exports.getTicket = async (req, res) => {
     const { title, artist, price_min, price_max, price_type } = req.query;
 
     try {
@@ -58,7 +58,7 @@ exports.getEvent = async (req, res) => {
 };
 
 
-exports.addEvent = async (req, res) => {
+exports.addTicket = async (req, res) => {
     const { title, artist, description, location, date, price, available_seats } = req.body;
 
     if (!title || !artist || !location || !date || !price) {
@@ -91,7 +91,7 @@ exports.addEvent = async (req, res) => {
 }
 
 
-exports.updateEvent = async (req, res) => {
+exports.updateTicket = async (req, res) => {
     const { id } = req.params;
     const { title, artist, description, location, date, price, available_seats, reserved_seats } = req.body;
     try {
@@ -126,7 +126,7 @@ exports.updateEvent = async (req, res) => {
     }
 }
 
-exports.deleteEvent = async (req, res) => {
+exports.deleteTicket = async (req, res) => {
     const { id } = req.params;
     try {
         const eventCheck = await pool.query('SELECT * FROM events WHERE id = $1', [id]);

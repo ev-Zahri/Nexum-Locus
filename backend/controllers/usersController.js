@@ -58,7 +58,7 @@ exports.login = async (req, res) => {
             return res.status(401).json(createError(false, 401, "Unauthenticated", "Invalid credentials"));
         }
 
-        const token = generateToken({ id: user.id, email: user.email });
+        const token = generateToken({ id: user.id, email: user.email, role: user.role });
         return res.status(200).json(createRes(true, 200, "Login successful", token));
     } catch (err) {
         return res.status(500).json(createError(false, 500, "Internal Server Error", err.message));
@@ -82,7 +82,7 @@ exports.getProfile = async (req, res) => {
 // // PUT /profile: Memperbarui profil pengguna
 exports.updateProfile = async (req, res) => {
     const { id } = req.params;
-    const { username, email, password, address, dateOfBirth } = req.body;
+    const { username, email, password, address, dateOfBirth, role } = req.body;
     try {
         // Ambil data pengguna saat ini dari database
         const currentUserResult = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
@@ -98,12 +98,15 @@ exports.updateProfile = async (req, res) => {
         const updatedPass = password || currentUser.password;
         const updatedAddress = address || currentUser.address;
         const updatedDateOfBirth = dateOfBirth || currentUser.dateOfBirth;
+        const updatedRole = role || currentUser.role;
         const updateAt = new Date().toISOString();
+
+        const hashedPassword = await bcrypt.hash(updatedPass, 8);
 
         // Perbarui hanya data yang diberikan
         const result = await pool.query(
-            'UPDATE users SET username = $2, email = $3, password = $4, address = $5, dateOfBirth = $6, update_at = $7 WHERE id = $1 RETURNING id, username, email, password, address, dateOfBirth, update_at',
-            [id, updatedusername, updatedEmail, updatedPass, updatedAddress, updatedDateOfBirth, updateAt]
+            'UPDATE users SET username = $2, email = $3, password = $4, address = $5, dateOfBirth = $6, update_at = $7, role = $8  WHERE id = $1 RETURNING id, username, email, password, address, dateOfBirth, update_at, role',
+            [id, updatedusername, updatedEmail, hashedPassword, updatedAddress, updatedDateOfBirth, updateAt, updatedRole]
         );
         return res.status(200).json(createRes(true, 200, "Profile updated successfully", result.rows[0]));
     } catch (err) {
